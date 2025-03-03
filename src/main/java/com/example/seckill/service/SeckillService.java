@@ -4,10 +4,6 @@ import com.example.seckill.entity.SeckillOrder;
 import com.example.seckill.vo.GoodsVo;
 
 public interface SeckillService {
-    SeckillOrder seckillIncorrect(Long userId, GoodsVo goodsVo);
-
-    SeckillOrder seckillByLock(Long userId, GoodsVo goodsVo);
-
     /**
      * 执行秒杀操作
      */

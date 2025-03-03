@@ -18,35 +18,6 @@ public class SeckillServiceImpl implements SeckillService {
     @Autowired
     private OrderService orderService;
 
-
-    @Override
-    @Transactional
-    public SeckillOrder seckillIncorrect(Long userId, GoodsVo goodsVo) {
-
-        // v0 错误示范 未考虑并发
-        boolean success = goodsService.reduceStockIncorrect(goodsVo.getSeckillGoodsId());
-        if (success) {
-            // 2. 创建订单
-            return orderService.createOrder(userId, goodsVo);
-        }
-        // 库存减少失败，秒杀失败
-        return null;
-    }
-
-    @Override
-    @Transactional
-    public SeckillOrder seckillByLock(Long userId, GoodsVo goodsVo) {
-
-        // v1 悲观锁实现
-        boolean success = goodsService.reduceStockByPessimisticLock(goodsVo.getSeckillGoodsId());
-        if (success) {
-            // 2. 创建订单
-            return orderService.createOrder(userId, goodsVo);
-        }
-        // 库存减少失败，秒杀失败
-        return null;
-    }
-
     @Override
     @Transactional
     public SeckillOrder seckill(Long userId, GoodsVo goodsVo) {
