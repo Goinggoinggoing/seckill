@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.seckill.dao.GoodsDao">
+
+    <select id="listGoodsVo" resultType="com.example.seckill.vo.GoodsVo">
+        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.start_time, sg.end_time, sg.seckill_price
+        FROM goods g
+        LEFT JOIN seckill_goods sg ON g.id = sg.goods_id
+    </select>
+
+    <select id="getGoodsVoByGoodsId" resultType="com.example.seckill.vo.GoodsVo">
+        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.start_time, sg.end_time, sg.seckill_price
+        FROM goods g
+        LEFT JOIN seckill_goods sg ON g.id = sg.goods_id
+        WHERE g.id = #{goodsId}
+    </select>
+
+    <!-- 查询信息，不加锁 -->
+    <select id="getStock" resultType="SeckillGoods">
+        SELECT * FROM seckill_goods WHERE id = #{seckillGoodsId}
+    </select>
+
+    <!-- 更新库存 -->
+    <update id="updateStock">
+        UPDATE seckill_goods
+        SET stock_count = stock_count - 1, version = version + 1
+        WHERE id = #{seckillGoodsId}
+    </update>
+
+
+    <!-- 查询时加锁 -->
+    <select id="getSeckillGoodsForUpdate" resultType="SeckillGoods">
+        SELECT * FROM seckill_goods
+        WHERE id = #{seckillGoodsId} AND stock_count > 0
+            FOR UPDATE
+    </select>
+
+<!--    版本号实现乐观锁-->
+    <update id="reduceStockByVersion">
+        UPDATE seckill_goods
+        SET stock_count = stock_count - 1, version = version + 1
+        WHERE id = #{seckillGoodsId} AND version = #{version}
+    </update>
+
+    <update id="reduceStockWhenLeft">
+        UPDATE seckill_goods
+        SET stock_count = stock_count - 1, version = version + 1
+        WHERE id = #{seckillGoodsId} AND stock_count > 0
+    </update>
+
+
+
+
+
+
+
+
+
+
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.seckill.dao.OrderDao">
+
+    <select id="getOrderByUserIdGoodsId" resultType="com.example.seckill.entity.SeckillOrder">
+        SELECT * FROM seckill_order
+        WHERE user_id = #{userId} AND goods_id = #{goodsId}
+    </select>
+
+    <insert id="insertOrder" parameterType="com.example.seckill.entity.SeckillOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO seckill_order
+        (user_id, goods_id, seckill_goods_id, order_no, status, create_time, pay_amount)
+        VALUES
+            (#{userId}, #{goodsId}, #{seckillGoodsId}, #{orderNo}, #{status}, #{createTime}, #{payAmount})
+    </insert>
+
+    <select id="getOrderByOrderNo" resultType="com.example.seckill.vo.OrderVo">
+        SELECT o.*, g.goods_name, g.goods_img, g.goods_price
+        FROM seckill_order o
+                 LEFT JOIN goods g ON o.goods_id = g.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+
+    <select id="getOrdersByUserId" resultType="com.example.seckill.vo.OrderVo">
+        SELECT o.*, g.goods_name, g.goods_img, g.goods_price
+        FROM seckill_order o
+                 LEFT JOIN goods g ON o.goods_id = g.id
+        WHERE o.user_id = #{userId}
+        ORDER BY o.create_time DESC
+    </select>
+</mapper>
