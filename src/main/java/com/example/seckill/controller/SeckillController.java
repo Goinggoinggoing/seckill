@@ -53,13 +53,7 @@ public class SeckillController {
             return Result.error(400, "秒杀已结束");
         }
 
-        // 4. 判断是否已经秒杀过了
-        SeckillOrder order = orderService.getOrderByUserIdGoodsId(userId, goodsId);
-        if (order != null) {
-            return Result.error(400, "您已经秒杀过该商品");
-        }
-
-        // 5. 执行秒杀
+        // 4. 执行秒杀
         SeckillOrder seckillOrder = seckillService.seckill(userId, goods);
         if (seckillOrder == null) {
             return Result.error(500, "秒杀失败，商品已售罄");
