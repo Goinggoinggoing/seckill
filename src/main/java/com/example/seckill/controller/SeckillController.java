@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
 @RestController
 @RequestMapping("/seckill")
 public class SeckillController {
@@ -23,6 +24,7 @@ public class SeckillController {
     private OrderService orderService;
 
     @Autowired
+    @Resource(name = "seckillServiceImplv2")
     private SeckillService seckillService;
 
     /**
