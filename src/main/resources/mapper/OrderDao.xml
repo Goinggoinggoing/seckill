@@ -28,4 +28,9 @@
         WHERE o.user_id = #{userId}
         ORDER BY o.create_time DESC
     </select>
+    
+    <select id="countOrdersByGoodsId" resultType="java.lang.Integer">
+        SELECT count(*) FROM seckill_order
+        WHERE goods_id = #{goodsId}
+    </select>
 </mapper>

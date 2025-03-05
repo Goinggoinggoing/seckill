@@ -47,4 +47,9 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderVo> getOrdersByUserId(Long userId) {
         return orderDao.getOrdersByUserId(userId);
     }
+
+    @Override
+    public Integer countOrdersByGoodsId(long goodsId) {
+        return orderDao.countOrdersByGoodsId(goodsId);
+    }
 }

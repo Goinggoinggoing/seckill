@@ -26,4 +26,6 @@ public interface OrderService {
      * 获取用户所有订单
      */
     List<OrderVo> getOrdersByUserId(Long userId);
+
+    Integer countOrdersByGoodsId(long goodsId);
 }

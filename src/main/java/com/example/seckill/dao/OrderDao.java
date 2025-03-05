@@ -28,4 +28,6 @@ public interface OrderDao {
      * 获取用户所有订单
      */
     List<OrderVo> getOrdersByUserId(@Param("userId") Long userId);
+
+    Integer countOrdersByGoodsId(long goodsId);
 }
