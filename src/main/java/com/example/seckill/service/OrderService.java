@@ -28,4 +28,7 @@ public interface OrderService {
     List<OrderVo> getOrdersByUserId(Long userId);
 
     Integer countOrdersByGoodsId(long goodsId);
+
+    SeckillOrder getOrderByTransactionId(String transactionId);
+    SeckillOrder createOrderWithTransactionId(Long userId, GoodsVo goodsVo, String transactionId);
 }

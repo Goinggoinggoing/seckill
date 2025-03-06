@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.seckill.dao.IdempotenceRecordDao">
+    
+    <insert id="insertRecord" parameterType="com.example.seckill.entity.IdempotenceRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO idempotence_record (transaction_id, processed, create_time)
+        VALUES (#{transactionId}, #{processed}, #{createTime})
+        ON DUPLICATE KEY UPDATE id = id
+    </insert>
+    
+    <select id="findByTransactionId" resultType="com.example.seckill.entity.IdempotenceRecord">
+        SELECT id, transaction_id as transactionId, processed, create_time as createTime
+        FROM idempotence_record
+        WHERE transaction_id = #{transactionId}
+        LIMIT 1
+    </select>
+    
+</mapper>

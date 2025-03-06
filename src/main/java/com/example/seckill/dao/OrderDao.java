@@ -30,4 +30,6 @@ public interface OrderDao {
     List<OrderVo> getOrdersByUserId(@Param("userId") Long userId);
 
     Integer countOrdersByGoodsId(long goodsId);
+
+    OrderVo getOrderByTransactionId(String transactionId);
 }

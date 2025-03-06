@@ -15,4 +15,5 @@ public class SeckillOrder {
     private Date createTime;
     private Date payTime;
     private BigDecimal payAmount;
+    private String transactionId;
 }

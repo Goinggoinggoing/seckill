@@ -33,4 +33,9 @@
         SELECT count(*) FROM seckill_order
         WHERE goods_id = #{goodsId}
     </select>
+
+    <select id="getOrderByTransactionId" resultType="com.example.seckill.entity.SeckillOrder">
+        SELECT * FROM seckill_order
+        WHERE transaction_id = #{transactionId}
+    </select>
 </mapper>

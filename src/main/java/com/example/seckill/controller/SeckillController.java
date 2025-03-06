@@ -24,7 +24,7 @@ public class SeckillController {
     private OrderService orderService;
 
     @Autowired
-    @Resource(name = "seckillServiceImplv2")
+    @Resource(name = "seckillServiceImplv3")
     private SeckillService seckillService;
 
     /**
@@ -61,7 +61,7 @@ public class SeckillController {
             return Result.error(500, "秒杀失败，商品已售罄");
         }
 
-        return Result.success("秒杀成功，订单号：" + seckillOrder.getOrderNo());
+        return Result.success("秒杀成功，订单号：" + seckillOrder.getTransactionId());
     }
 
     /**

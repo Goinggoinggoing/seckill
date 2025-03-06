@@ -52,4 +52,26 @@ public class OrderServiceImpl implements OrderService {
     public Integer countOrdersByGoodsId(long goodsId) {
         return orderDao.countOrdersByGoodsId(goodsId);
     }
+
+    @Override
+    public SeckillOrder createOrderWithTransactionId(Long userId, GoodsVo goodsVo, String transactionId) {
+        SeckillOrder order = new SeckillOrder();
+        order.setUserId(userId);
+        order.setGoodsId(goodsVo.getId());
+        order.setSeckillGoodsId(goodsVo.getSeckillGoodsId());
+        order.setOrderNo(UUIDUtil.generateOrderNo());
+        order.setStatus(0); // 0: 新建未支付
+        order.setCreateTime(new Date());
+        order.setPayAmount(goodsVo.getSeckillPrice());
+        order.setTransactionId(transactionId);
+        
+        // 插入订单
+        orderDao.insertOrder(order);
+        return order;
+    }
+
+    @Override
+    public OrderVo getOrderByTransactionId(String transactionId) {
+        return orderDao.getOrderByTransactionId(transactionId);
+    }
 }
