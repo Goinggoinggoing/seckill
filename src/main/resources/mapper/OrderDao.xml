@@ -9,9 +9,9 @@
 
     <insert id="insertOrder" parameterType="com.example.seckill.entity.SeckillOrder" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO seckill_order
-        (user_id, goods_id, seckill_goods_id, order_no, status, create_time, pay_amount)
+        (user_id, goods_id, seckill_goods_id, order_no, status, create_time, pay_amount, transaction_id)
         VALUES
-            (#{userId}, #{goodsId}, #{seckillGoodsId}, #{orderNo}, #{status}, #{createTime}, #{payAmount})
+            (#{userId}, #{goodsId}, #{seckillGoodsId}, #{orderNo}, #{status}, #{createTime}, #{payAmount}, #{transactionId})
     </insert>
 
     <select id="getOrderByOrderNo" resultType="com.example.seckill.vo.OrderVo">

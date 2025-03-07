@@ -31,5 +31,5 @@ public interface OrderDao {
 
     Integer countOrdersByGoodsId(long goodsId);
 
-    OrderVo getOrderByTransactionId(String transactionId);
+    SeckillOrder getOrderByTransactionId(String transactionId);
 }

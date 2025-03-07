@@ -71,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderVo getOrderByTransactionId(String transactionId) {
+    public SeckillOrder getOrderByTransactionId(String transactionId) {
         return orderDao.getOrderByTransactionId(transactionId);
     }
 }
