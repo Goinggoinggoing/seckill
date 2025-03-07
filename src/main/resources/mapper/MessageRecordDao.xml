@@ -5,7 +5,6 @@
     <insert id="insertRecord" parameterType="com.example.seckill.entity.IdempotenceRecord" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO idempotence_record (transaction_id, processed, create_time)
         VALUES (#{transactionId}, #{processed}, #{createTime})
-        ON DUPLICATE KEY UPDATE id = id
     </insert>
     
     <select id="findByTransactionId" resultType="com.example.seckill.entity.IdempotenceRecord">
