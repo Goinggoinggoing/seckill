@@ -3,6 +3,7 @@ package com.example.seckill.mq;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,9 @@ public class StockReductionConsumer implements RocketMQListener<String> {
 
     @Autowired
     private IdempotenceRecordDao idempotenceRecordDao;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Override
     public void onMessage(String message) {
@@ -95,27 +99,18 @@ public class StockReductionConsumer implements RocketMQListener<String> {
         // 1. Check if the message has been processed
         IdempotenceRecord existingRecord = idempotenceRecordDao.findByTransactionId(transactionId);
 
-        // 2. If the message was already processed, return the processing result
+        // 2. If the message was already processed, return false
         if (existingRecord != null) {
             log.info("Message already processed, transactionId: {}", transactionId);
-            return existingRecord.getProcessed() != null && existingRecord.getProcessed();
+            return false;
         }
         // 3. Execute stock reduction and record the message in the same transaction
-        try {
-            // 3. Execute stock reduction and record the message in the same transaction
-            return processWithTransaction(goodsId, transactionId);
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // Catch the unique index violation exception, indicating concurrent processing record already exists
-            log.info("Duplicate processing detected, transactionId: {}", transactionId);
-            // Since the transaction is rolled back, the stock reduction is also rolled back,
-            // re-query the record to get the correct result.
-            IdempotenceRecord record = idempotenceRecordDao.findByTransactionId(transactionId);
-            return record != null && record.getProcessed() != null && record.getProcessed();
-        }
+        StockReductionConsumer proxy = applicationContext.getBean(StockReductionConsumer.class);
+        return proxy.processWithTransaction(goodsId, transactionId);
     }
 
     @Transactional
-    private boolean processWithTransaction(Long goodsId, String transactionId) {
+    public boolean processWithTransaction(Long goodsId, String transactionId) {
         // 1. Execute business logic - reduce inventory
         boolean success = goodsService.reduceStockWhenLeft(goodsId);
         

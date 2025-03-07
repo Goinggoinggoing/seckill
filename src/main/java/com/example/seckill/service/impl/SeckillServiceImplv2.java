@@ -1,6 +1,7 @@
 package com.example.seckill.service.impl;
 
 import com.example.seckill.entity.SeckillOrder;
+import com.example.seckill.mq.StockReductionConsumer;
 import com.example.seckill.redis.SeckillKey;
 import com.example.seckill.service.GoodsService;
 import com.example.seckill.service.OrderService;
@@ -14,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,10 @@ public class SeckillServiceImplv2 implements SeckillService {
     
     @Autowired
     private RedisService redisService;
+
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private static final ExecutorService orderExecutor = Executors.newFixedThreadPool(5000);
 
@@ -77,7 +83,8 @@ public class SeckillServiceImplv2 implements SeckillService {
 
         orderExecutor.submit(() -> {
             try {
-                SeckillOrder order = createSeckillOrder(finalUserId, finalGoodsVo);
+                SeckillServiceImplv2 proxy = applicationContext.getBean(SeckillServiceImplv2.class);
+                SeckillOrder order = proxy.createSeckillOrder(finalUserId, finalGoodsVo);
             } catch (Exception e) {
                 log.error("Create order async error: ", e);
                 redisService.incr(SeckillKey.goodsStock, "" + finalGoodsVo.getId());
