@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.seckill.dao.IdempotenceRecordDao;
 import com.example.seckill.entity.IdempotenceRecord;
+import com.example.seckill.redis.SeckillKey;
 import com.example.seckill.service.GoodsService;
 import com.example.seckill.service.RedisService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -60,7 +61,7 @@ public class StockReductionConsumer implements RocketMQListener<String> {
             boolean success = processStockReductionWithIdempotence(goodsId, transactionId);
 
             if (!success) {
-                log.warn("Failed to reduce stock in database for goods: {}", goodsId);
+                log.info("Failed to reduce stock in database for goods: {} transactionId: {} because already reduced", goodsId, transactionId);
             }
             log.info("Inventory updated successfully for goods: {}", goodsId);
             
@@ -105,8 +106,14 @@ public class StockReductionConsumer implements RocketMQListener<String> {
             return false;
         }
         // 3. Execute stock reduction and record the message in the same transaction
-        StockReductionConsumer proxy = applicationContext.getBean(StockReductionConsumer.class);
-        return proxy.processWithTransaction(goodsId, transactionId);
+        try {
+            StockReductionConsumer proxy = applicationContext.getBean(StockReductionConsumer.class);
+            return proxy.processWithTransaction(goodsId, transactionId);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Catch the unique index violation exception, indicating concurrent processing record already exists
+            log.info("Duplicate processing detected, transactionId: {}", transactionId);
+            return false;
+        }
     }
 
     @Transactional
