@@ -36,6 +36,11 @@ public interface GoodsDao {
      * 减少库存，并且在有库存条件下
      */
     int reduceStockWhenLeft(@Param("seckillGoodsId") Long seckillGoodsId);
+
+    /**
+     * 库存回退
+     */
+    int rollbackStock(@Param("seckillGoodsId") Long seckillGoodsId);
     
 
 

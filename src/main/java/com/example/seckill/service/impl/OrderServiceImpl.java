@@ -74,4 +74,9 @@ public class OrderServiceImpl implements OrderService {
     public SeckillOrder getOrderByTransactionId(String transactionId) {
         return orderDao.getOrderByTransactionId(transactionId);
     }
+
+    @Override
+    public boolean cancelOrder(String transactionId) {
+        return orderDao.cancelOrder(transactionId) > 0;
+    }
 }

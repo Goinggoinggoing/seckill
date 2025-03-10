@@ -33,7 +33,9 @@ public class MQProducer {
     
     private static final String TOPIC_TEST = "topic-test";
     private static final String TOPIC_STOCK_REDUCTION = "topic-stock-reduction";
-
+    
+    public static final String TOPIC_ORDER_CANCEL = "topic-order-cancel";
+    
     /**
      * Send a simple message
      */
@@ -103,5 +105,24 @@ public class MQProducer {
         log.info("Transaction message sent for order creation with txId: {}", transactionId);
 
         return transactionId;
+    }
+    
+    public void sendOrderCancellationMessage(String transactionId) {
+            try {
+                Map<String, Object> msg = new HashMap<>();
+                msg.put("transactionId", transactionId);
+                msg.put("timestamp", System.currentTimeMillis());
+                
+                String jsonString = objectMapper.writeValueAsString(msg);
+                Message<String> message = MessageBuilder.withPayload(jsonString).build();
+                
+                // Use delay level 18, which means the order will timeout after 30 minutes
+                // RocketMQ supported delay levels: 1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
+                rocketMQTemplate.syncSend(TOPIC_ORDER_CANCEL, message, 
+                2000, 18);
+            log.info("Order cancellation message sent for transactionId: {}, will be processed after 30 minutes", transactionId);
+        } catch (Exception e) {
+            log.error("Failed to send order cancellation message for transactionId: {}", transactionId, e);
+        }
     }
 }

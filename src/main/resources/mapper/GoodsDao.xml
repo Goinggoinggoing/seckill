@@ -3,13 +3,13 @@
 <mapper namespace="com.example.seckill.dao.GoodsDao">
 
     <select id="listGoodsVo" resultType="com.example.seckill.vo.GoodsVo">
-        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.start_time, sg.end_time, sg.seckill_price
+        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.total_stock, sg.start_time, sg.end_time, sg.seckill_price
         FROM goods g
         LEFT JOIN seckill_goods sg ON g.id = sg.goods_id
     </select>
 
     <select id="getGoodsVoByGoodsId" resultType="com.example.seckill.vo.GoodsVo">
-        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.start_time, sg.end_time, sg.seckill_price
+        SELECT g.*, sg.id as seckill_goods_id, sg.stock_count, sg.total_stock, sg.start_time, sg.end_time, sg.seckill_price
         FROM goods g
         LEFT JOIN seckill_goods sg ON g.id = sg.goods_id
         WHERE g.id = #{goodsId}
@@ -48,6 +48,11 @@
         WHERE id = #{seckillGoodsId} AND stock_count > 0
     </update>
 
+    <update id="rollbackStock">
+        UPDATE seckill_goods
+        SET stock_count = stock_count + 1, version = version + 1
+        WHERE id = #{seckillGoodsId}
+    </update>
 
 
 

@@ -11,4 +11,6 @@ public class SeckillKey extends BasePrefix {
     public static SeckillKey seckillPending = new SeckillKey( 60, "sp");  // 60 seconds expiry
 
     public static final SeckillKey txStartTime = new SeckillKey(600, "txst"); // 10 min timeout
+
+    public static final SeckillKey reservedStock = new SeckillKey(0, "rs"); // reserved stock count
 }

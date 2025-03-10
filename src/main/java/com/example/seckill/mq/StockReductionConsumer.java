@@ -62,8 +62,10 @@ public class StockReductionConsumer implements RocketMQListener<String> {
 
             if (!success) {
                 log.info("Failed to reduce stock in database for goods: {} transactionId: {} because already reduced", goodsId, transactionId);
+            } else {
+                redisService.decr(SeckillKey.reservedStock, "" + goodsId);
+                log.info("Inventory updated successfully for goods: {}", goodsId);
             }
-            log.info("Inventory updated successfully for goods: {}", goodsId);
             
             
         } catch (JsonProcessingException e) {

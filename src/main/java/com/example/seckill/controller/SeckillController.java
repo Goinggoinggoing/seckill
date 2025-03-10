@@ -1,5 +1,6 @@
 package com.example.seckill.controller;
 
+import com.example.seckill.annotation.RateLimit;
 import com.example.seckill.entity.SeckillOrder;
 import com.example.seckill.service.GoodsService;
 import com.example.seckill.service.OrderService;
@@ -31,6 +32,14 @@ public class SeckillController {
      * 执行秒杀
      */
     @PostMapping("/{userId}/{goodsId}")
+    @RateLimit(
+        key = "seckill", 
+        type = RateLimit.RateLimitType.IP, 
+        rate = 0.2, 
+        capacity = 1, 
+        tokens = 1, 
+        message = "操作频率超限，请稍后再试"
+    )
     public Result<String> seckill(
             @PathVariable("userId") Long userId,
             @PathVariable("goodsId") Long goodsId) {
@@ -67,6 +76,14 @@ public class SeckillController {
     /**
      * 获取秒杀结果
      */
+    @RateLimit(
+        key = "result", 
+        type = RateLimit.RateLimitType.USER, 
+        rate = 1.5, 
+        capacity = 3, 
+        tokens = 1,
+        message = "查询太频繁，请稍后再试"
+    )
     @GetMapping("/result/{userId}/{goodsId}")
     public Result<Map<String, Object>> getSeckillResult(
             @PathVariable("userId") Long userId,

@@ -10,9 +10,13 @@ import com.example.seckill.service.SeckillService;
 import com.example.seckill.utils.RedisDistributedLock;
 import com.example.seckill.vo.GoodsVo;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,8 +37,41 @@ public class SeckillServiceImplv3 implements SeckillService {
     private static final int LOCK_EXPIRE_SECONDS = 10; // 10 seconds lock expiration
     private static final long LOCK_TIMEOUT_MS = 5000; // 5 seconds timeout for acquiring lock
 
+    private static final boolean TIMEOUT_CANCEL_ORDER = false; // Whether to cancel order
+
+
     @Autowired
     private MQProducer mqProducer;
+
+    // decrease stock and pre
+    private static final String DECREASE_STOCK_SCRIPT = 
+        "local stock = redis.call('decr', KEYS[1]) " +
+        "if stock >= 0 then " +
+        "  redis.call('incr', KEYS[2]) " +
+        "  return stock " +
+        "else " +
+        "  redis.call('incr', KEYS[1]) " + // rollback if insufficient
+        "  return -1 " +
+        "end";
+
+    // Script compiled once for efficiency
+    private static final DefaultRedisScript<Long> DECREASE_STOCK_REDIS_SCRIPT = new DefaultRedisScript<>(DECREASE_STOCK_SCRIPT, Long.class);
+
+
+    private static final String ROLLBACK_STOCK_SCRIPT = 
+        "redis.call('incr', KEYS[1]) " +
+        "redis.call('decr', KEYS[2]) " +
+        "return 1";
+
+    // Script compiled once for efficiency
+    private static final DefaultRedisScript<Long> ROLLBACK_STOCK_REDIS_SCRIPT = 
+        new DefaultRedisScript<>(ROLLBACK_STOCK_SCRIPT, Long.class);
+
+    // Local cache for sold-out goods with 5 minutes expiration
+    private final Cache<Long, Boolean> localSoldOutCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)  // Maximum items in cache
+            .expireAfterWrite(5, TimeUnit.MINUTES)  // Cache entries expire after 5 minutes
+            .build();
 
     /**
      * Seckill implementation optimized with MQ
@@ -54,12 +91,18 @@ public class SeckillServiceImplv3 implements SeckillService {
         initStockIfNeeded(goodsVo);
 
         // 2. Pre-deduct stock in Redis to reduce database access
-        Long stock = redisService.decr(SeckillKey.goodsStock, "" + goodsVo.getId());
-        
-        // 3. Check if stock is sufficient
-        if (stock < 0) {
-            // If stock is insufficient, rollback Redis stock and mark goods as sold out
-            redisService.incr(SeckillKey.goodsStock, "" + goodsVo.getId());
+        Long result = redisService.executeScript(
+            DECREASE_STOCK_REDIS_SCRIPT,
+            Arrays.asList(
+                redisService.getRealKey(SeckillKey.goodsStock, "" + goodsVo.getId()), 
+                redisService.getRealKey(SeckillKey.reservedStock, "" + goodsVo.getId())
+            )
+        );
+
+        // Check result
+        if (result < 0) {
+            // Stock insufficient, already rolled back in the script
+            // redisService.incr(SeckillKey.goodsStock, "" + goodsVo.getId());
             setGoodsOver(goodsVo.getId());
             return null;
         }
@@ -67,6 +110,12 @@ public class SeckillServiceImplv3 implements SeckillService {
         // 4. Using transaction message to create order and notify inventory service
         try {
             String transactionId = mqProducer.sendStockReductionTransactionMessage(userId, goodsVo);
+            
+            // send delay message to cancel order
+            if (TIMEOUT_CANCEL_ORDER) {
+                // Note: Since this is not a transactional message, there might be a scenario where the order exists but the message was not sent.
+                mqProducer.sendOrderCancellationMessage(transactionId);
+            }
                         
             // 5. Return a temporary order to indicate processing
             SeckillOrder order = new SeckillOrder();
@@ -76,8 +125,14 @@ public class SeckillServiceImplv3 implements SeckillService {
             return order;
         } catch (Exception e) {
             log.error("Failed to send transaction message", e);
-            // Rollback Redis stock on error
-            redisService.incr(SeckillKey.goodsStock, "" + goodsVo.getId());
+            // Atomically rollback both Redis stock and reserved stock on error
+            redisService.executeScript(
+                ROLLBACK_STOCK_REDIS_SCRIPT,
+                Arrays.asList(
+                    redisService.getRealKey(SeckillKey.goodsStock, "" + goodsVo.getId()),
+                    redisService.getRealKey(SeckillKey.reservedStock, "" + goodsVo.getId())
+                )
+            );
             return null;
         }
     }
@@ -125,14 +180,34 @@ public class SeckillServiceImplv3 implements SeckillService {
      * Mark goods as sold out
      */
     private void setGoodsOver(Long goodsId) {
+        // Update Redis
         redisService.set(SeckillKey.isGoodsOver, "" + goodsId, true);
+        
+        // Update local cache
+        localSoldOutCache.put(goodsId, true);
+        log.debug("Goods {} marked as sold out in both Redis and local cache", goodsId);
     }
     
     /**
-     * Check if goods are sold out
+     * Check if goods are sold out using local cache first, then Redis
      */
     private boolean isGoodsOver(Long goodsId) {
-        return redisService.exists(SeckillKey.isGoodsOver, "" + goodsId);
+        // First check local cache (much faster)
+        Boolean isOver = localSoldOutCache.getIfPresent(goodsId);
+        if (isOver != null && isOver) {
+            return true;
+        }
+        
+        // If not in local cache, check Redis
+        boolean isSoldOutInRedis = redisService.exists(SeckillKey.isGoodsOver, "" + goodsId);
+        
+        // If found in Redis but not in local cache, update local cache
+        if (isSoldOutInRedis) {
+            localSoldOutCache.put(goodsId, true);
+            log.debug("Goods {} sold-out status loaded from Redis to local cache", goodsId);
+        }
+        
+        return isSoldOutInRedis;
     }
 
     /**

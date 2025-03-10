@@ -31,4 +31,6 @@ public interface OrderService {
 
     SeckillOrder getOrderByTransactionId(String transactionId);
     SeckillOrder createOrderWithTransactionId(Long userId, GoodsVo goodsVo, String transactionId);
+
+    boolean cancelOrder(String transactionId);
 }

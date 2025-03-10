@@ -29,6 +29,7 @@ public class SeckillInitService implements CommandLineRunner {
         for (GoodsVo goods : goodsList) {
             Long goodsId = goods.getId();
             redisService.delete(SeckillKey.isGoodsOver, "" + goodsId);
+            redisService.delete(SeckillKey.reservedStock, "" + goodsId);
         }
         
         // Initialize stock in Redis

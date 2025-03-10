@@ -6,6 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +18,7 @@ public class RedisService {
     private RedisTemplate<String, Object> redisTemplate;
     
     // Get key with prefix
-    private String getRealKey(KeyPrefix prefix, String key) {
+    public String getRealKey(KeyPrefix prefix, String key) {
         return prefix.getPrefix() + ":" + key;
     }
     
@@ -80,5 +82,15 @@ public class RedisService {
 
     public <T> T executeScript(DefaultRedisScript<T> script, List<String> keys, Object... args) {
         return redisTemplate.execute(script, keys, args);
+    }
+
+    public List<Integer> mget(String... keys) {
+        List<Object> results = redisTemplate.opsForValue().multiGet(Arrays.asList(keys));
+        
+        List<Integer> integers = new ArrayList<>();
+        for (Object result : results) {
+            integers.add(result != null ? Integer.parseInt(result.toString()) : null);
+        }
+        return integers;
     }
 }

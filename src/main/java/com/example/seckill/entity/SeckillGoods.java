@@ -10,6 +10,7 @@ public class SeckillGoods {
     private Long goodsId;
     private BigDecimal seckillPrice;
     private Integer stockCount;
+    private Integer totalStock;
     private Date startTime;
     private Date endTime;
     private Integer version;

@@ -44,7 +44,7 @@ class SeckillApplicationTests {
     private RedisService redisService;
     
     @Autowired
-    @Qualifier("seckillServiceImpl")
+    @Qualifier("seckillServiceImplv3")
     private SeckillService seckillService;
 
     @Test
@@ -55,7 +55,7 @@ class SeckillApplicationTests {
     @Test
     void testSeckillConcurrency() throws Exception {
         // 测试配置
-        final int CONCURRENT_USERS = 500000;  // 并发请求数
+        final int CONCURRENT_USERS = 100 * 10000;  // 并发请求数
         final int GOODS_ID = 1;           // 测试商品ID
         final long POLL_INTERVAL_MS = 200; // 轮询间隔时间
         
@@ -93,19 +93,19 @@ class SeckillApplicationTests {
                     
                     if (order != null) {
                         // 成功：轮询获取秒杀最终结果
-                        while (true) {
-                            Long resultCode = seckillService.getSeckillResult(userId, goodsVo.getId());
-                            // 当 resultCode 不为null且不等于0时认为已获得最终结果
-                            if (resultCode != null && resultCode != 0L) {
-                                break;
-                            }
-                            try {
-                                Thread.sleep(POLL_INTERVAL_MS);
-                            } catch (InterruptedException ie) {
-                                Thread.currentThread().interrupt();
-                                break;
-                            }
-                        }
+                        // while (true) {
+                        //     Long resultCode = seckillService.getSeckillResult(userId, goodsVo.getId());
+                        //     // 当 resultCode 不为null且不等于0时认为已获得最终结果
+                        //     if (resultCode != null && resultCode != 0L) {
+                        //         break;
+                        //     }
+                        //     try {
+                        //         Thread.sleep(POLL_INTERVAL_MS);
+                        //     } catch (InterruptedException ie) {
+                        //         Thread.currentThread().interrupt();
+                        //         break;
+                        //     }
+                        // }
                         long opEnd = System.currentTimeMillis();
                         totalSuccessTime.addAndGet(opEnd - opStart);
                         successCount.incrementAndGet();
@@ -129,6 +129,12 @@ class SeckillApplicationTests {
         long endTime = System.currentTimeMillis();
         
         executor.shutdown();
+
+        try {
+            Thread.sleep(30 * 1000);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
         
         // 获取测试后的库存信息
         GoodsVo finalGoodsInfo = goodsService.getGoodsVoByGoodsId((long) GOODS_ID);

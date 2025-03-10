@@ -32,4 +32,6 @@ public interface OrderDao {
     Integer countOrdersByGoodsId(long goodsId);
 
     SeckillOrder getOrderByTransactionId(String transactionId);
+
+    int cancelOrder(String transactionId);
 }

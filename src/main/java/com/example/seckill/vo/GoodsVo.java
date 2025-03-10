@@ -9,6 +9,7 @@ import java.util.Date;
 public class GoodsVo extends Goods {
     private BigDecimal seckillPrice;
     private Integer stockCount;
+    private Integer totalStock;
     private Date startTime;
     private Date endTime;
     private Long seckillGoodsId;

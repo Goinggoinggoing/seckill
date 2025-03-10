@@ -38,4 +38,10 @@
         SELECT * FROM seckill_order
         WHERE transaction_id = #{transactionId}
     </select>
+
+    <update id="cancelOrder" parameterType="com.example.seckill.entity.SeckillOrder">
+        UPDATE seckill_order
+        SET status = -1
+        WHERE transaction_id = #{transactionId} AND status = 0
+    </update>
 </mapper>
