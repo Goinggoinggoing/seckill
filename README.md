@@ -61,7 +61,7 @@
 
 ### V4 - 系统优化版
 
-`git checkout v4`
+`git checkout main`
 
 在V3基础上引入多项优化措施：
 
@@ -186,7 +186,7 @@ seckill-system/
 2. **数据库设置**
 
    - 创建MySQL数据库 `CREATE DATABASE IF NOT EXISTS seckillv2`
-   - 导入SQL脚本`mysql.sql`
+   - 导入SQL脚本`seckillv2.sql`
 
 3. **配置**
 
